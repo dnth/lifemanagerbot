@@ -11,7 +11,7 @@ db_user="root"
 db_passwd="root"
 db_lhc="national_db"
 
-def nc_entry(nc_name, nc_gend, nc_church, nc_ev_date, nc_dept, nc_age, nc_perso_type, nc_comp_uni, nc_niche_course):
+def nc_entry(nc_name, nc_gend, nc_church, nc_ev_date, nc_dept, nc_age, nc_perso_type, nc_comp_uni, nc_niche_course, nc_class):
     try:
 
 
@@ -20,11 +20,11 @@ def nc_entry(nc_name, nc_gend, nc_church, nc_ev_date, nc_dept, nc_age, nc_perso_
         cur = db.cursor()
 
         query = """
-        INSERT INTO `nc_details` (id, nc_name, nc_gend, nc_age, nc_church, nc_perso_type, nc_dept, nc_comp_uni, nc_niche_course, nc_ev_date)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO `nc_details` (id, nc_name, nc_gend, nc_age, nc_church, nc_perso_type, nc_dept, nc_comp_uni, nc_niche_course, nc_ev_date, nc_class)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
-        cur.execute(query, (None, nc_name, nc_gend, nc_age, nc_church, nc_perso_type, nc_dept, nc_comp_uni, nc_niche_course, nc_ev_date))
+        cur.execute(query, (None, nc_name, nc_gend, nc_age, nc_church, nc_perso_type, nc_dept, nc_comp_uni, nc_niche_course, nc_ev_date, nc_class))
 
 
     except Exception as e:
@@ -36,7 +36,7 @@ def nc_entry(nc_name, nc_gend, nc_church, nc_ev_date, nc_dept, nc_age, nc_perso_
 
 
 # nc_entry(nc_name='aniki', nc_gend='Male', nc_church='LLC', nc_ev_date='1978-01-02',
-#          nc_dept='Campus', nc_age=None, nc_perso_type=None, nc_comp_uni=None, nc_niche_course=None)
+#          nc_dept='CAMPUS', nc_age=None, nc_perso_type=None, nc_comp_uni=None, nc_niche_course=None, nc_class=None)
 
 
 def check_for_existing_user(telegram_id=None):

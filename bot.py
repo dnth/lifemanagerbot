@@ -62,10 +62,10 @@ reply_kb_church = [
 ]
 markup_list_church = ReplyKeyboardMarkup(reply_kb_church)
 
-reply_kb_ncdept = [['Campus', 'Youth', 'Others']]
+reply_kb_ncdept = [['CAMPUS', 'YOUTH', 'OTHERS']]
 markup_kb_ncdept = ReplyKeyboardMarkup(reply_kb_ncdept)
 
-reply_kb_perstype = [['Circle', 'Square'],['Triangle', 'S']]
+reply_kb_perstype = [['CIRCLE', 'SQUARE'],['TRIANGLE', 'S']]
 markup_kb_perstype = ReplyKeyboardMarkup(reply_kb_perstype)
 
 reply_kb_ncclass = [['A Class', 'B Class', 'C Class']]
@@ -281,8 +281,16 @@ def done_nc_det(bot, update, user_data):
 
         # inspect date format
         try:
-            datetime.datetime.strptime(user_data['Evangelism Date'], '%Y-%m-%d')
-            # done doesnt work
+            ev_date = datetime.datetime.strptime(user_data['Evangelism Date'], '%Y-%m-%d')
+
+            # disable entry of future date
+            if ev_date > datetime.datetime.today():
+                update.message.reply_text(
+                "You seem to have entered a date in the future, are you sure the date is right? "
+                "Please re-enter the date of evangelism")
+                return NC_DETAILS
+
+
         except:
             update.message.reply_text("Wrong date format, please re-enter the date in the following format yyyy-mm-dd\n\n"
                                   "For example 1978-06-01" )
@@ -297,12 +305,14 @@ def done_nc_det(bot, update, user_data):
             user_data['Company/University'] = None
         if 'Job/Course' not in user_data:
             user_data['Job/Course'] = None
+        if 'Class' not in user_data:
+            user_data['Class'] = None
 
         # enter into db here
         nc_entry(nc_name=user_data['Name'], nc_dept=user_data['Department'], nc_church=user_data['Church'],
                  nc_gend=user_data['Gender'], nc_age=user_data['Age'], nc_ev_date=user_data['Evangelism Date'],
                  nc_niche_course=user_data['Job/Course'], nc_comp_uni=user_data['Company/University'],
-                 nc_perso_type=user_data['Type'])
+                 nc_perso_type=user_data['Type'], nc_class=user_data['Class'])
 
 
         update.message.reply_sticker("CAADAgADQgADVSx4C1--9Yr_WY3AAg")
@@ -310,6 +320,9 @@ def done_nc_det(bot, update, user_data):
                                   "{}\n"
                                   "Thanks! Come back when you have more NCs for me~".format(facts_to_str(user_data)),
                                   reply_markup=markup_main_menu_kb)
+
+        print "[{}] {} finished enter data for NC".format(datetime.datetime.now(),
+                                                 get_user_engname(update.message.chat_id).encode('utf-8'))
         user_data.clear()
         return ConversationHandler.END
 
@@ -460,6 +473,10 @@ def key_in(bot, update):
                               "Please select from the items below:",
                               reply_markup=markup_nc_det_kb,
                               parse_mode=telegram.ParseMode.MARKDOWN)
+
+    print "[{}] {} starts entering data for NC".format(datetime.datetime.now(),
+                                                      get_user_engname(update.message.chat_id).encode('utf-8'))
+
     return NC_DETAILS
 
 
