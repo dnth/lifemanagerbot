@@ -24,7 +24,7 @@ from emoji import emojize
 import MySQLdb as mdb
 import datetime
 
-from db_helper import check_for_existing_user, get_user_engname, get_user_info
+from db_helper import check_for_existing_user, get_user_engname, get_user_info, nc_entry
 
 
 db_charset='utf8'
@@ -34,8 +34,7 @@ db_passwd="root"
 db_in_use="national_db"
 
 # Global variables
-secret_key = '123'
-
+secret_key = 'cumulonimbus'
 
 
 # Enable logging
@@ -84,7 +83,8 @@ markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
 # main menu keyboard here
 main_menu_kb = [['Start Conversation','End Conversation'],
                 ['National Newcomer List','View Statistics'],
-                ['Key in NC Details']
+                ['Key in NC Details', 'Update NC Details'],
+                ['Key NC Attendance', 'Delete NC']
                 ]
 markup_main_menu_kb = ReplyKeyboardMarkup(main_menu_kb)
 
@@ -93,8 +93,8 @@ markup_main_menu_kb = ReplyKeyboardMarkup(main_menu_kb)
 nc_det_kb = [
             ['Name', 'Evangelism Date'],
             ['Gender', 'Age'],
-            ['Company/University', 'Job/Course'],
             ['Department','Church'],
+            ['Company/University', 'Job/Course'],
             ['Type', 'Class'],
             ['Done', '/cancel']
             ]
@@ -277,11 +277,33 @@ def done_nc_det(bot, update, user_data):
         return NC_DETAILS
 
 
-
-
-
     else:
+
+        # inspect date format
+        try:
+            datetime.datetime.strptime(user_data['Evangelism Date'], '%Y-%m-%d')
+            # done doesnt work
+        except:
+            update.message.reply_text("Wrong date format, please re-enter the date in the following format yyyy-mm-dd\n\n"
+                                  "For example 1978-06-01" )
+            return NC_DETAILS
+
+        # should we have incomplete keys
+        if 'Age' not in user_data:
+            user_data['Age'] = None
+        if 'Type' not in user_data:
+            user_data['Type'] = None
+        if 'Company/University' not in user_data:
+            user_data['Company/University'] = None
+        if 'Job/Course' not in user_data:
+            user_data['Job/Course'] = None
+
         # enter into db here
+        nc_entry(nc_name=user_data['Name'], nc_dept=user_data['Department'], nc_church=user_data['Church'],
+                 nc_gend=user_data['Gender'], nc_age=user_data['Age'], nc_ev_date=user_data['Evangelism Date'],
+                 nc_niche_course=user_data['Job/Course'], nc_comp_uni=user_data['Company/University'],
+                 nc_perso_type=user_data['Type'])
+
 
         update.message.reply_sticker("CAADAgADQgADVSx4C1--9Yr_WY3AAg")
         update.message.reply_text("I have recorded your NC details as below:\n"
@@ -370,8 +392,8 @@ def nc_details_keyin(bot, update, user_data):
         update.message.reply_text("Erm.. your NC currently attending which church ar?", reply_markup=markup_list_church)
 
     if user_data['choice'] == 'Evangelism Date':
-        update.message.reply_text("When did you evangelized this NC? Please enter the date in the following format yyyy/mm/dd\n\n"
-                                  "For example 1978/06/01")
+        update.message.reply_text("When did you evangelized this NC? Please enter the date in the following format yyyy-mm-dd\n\n"
+                                  "For example 1978-06-01")
 
     if user_data['choice'] == 'Type':
         update.message.reply_text("Your NC belongs to which type of personality?", reply_markup=markup_kb_perstype)
@@ -432,7 +454,12 @@ def facts_to_str(user_data):
 
 
 def key_in(bot, update):
-    update.message.reply_text("Please select from the items below..", reply_markup=markup_nc_det_kb)
+    update.message.reply_text("You *MUST* key in the following fields:\n"
+                              "*Name*\n*Gender*\n*Evangelism Date*\n*Department*\n*Church*. \n"
+                              "As for the others, you will be able to update them later..\n\n"
+                              "Please select from the items below:",
+                              reply_markup=markup_nc_det_kb,
+                              parse_mode=telegram.ParseMode.MARKDOWN)
     return NC_DETAILS
 
 
